@@ -1,6 +1,8 @@
 package com.pgore.uploader;
 
 
+import com.pgore.options.CommandLineOptions;
+import org.apache.commons.cli2.OptionException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 
@@ -14,18 +16,23 @@ import org.apache.commons.httpclient.params.HttpParams;
 import java.io.File;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 public class FileUploader {
 
-    public static void main(String[] args) throws IOException {
-        String url = "https://s3.amazonaws.com/pgore_dev_bucket/flags2.mp4?Expires=1387664653&AWSAccessKeyId=AKIAIHV5JYJ3RTKMD3BA&Signature=GPHR1kd81PghKA1XJXJgh1DrzyY%3D";
-        String filePath = "/home/pgore/Videos/flags.mp4";
+    public static void main(String[] args) throws IOException, OptionException {
+
+        System.out.println(FileUploader.class.getCanonicalName());
+        CommandLineOptions options = new CommandLineOptions(args);
+
+        URL uploadPath = options.getHttpURL();
+        String filePath = options.getFilePath();
         File file = new File(filePath);
 
         HttpClient client = new HttpClient();
-        PutMethod put = new PutMethod(url);
+        PutMethod put = new PutMethod(uploadPath.toString());
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("Content-Type", "application/octet-stream");
 
@@ -46,7 +53,9 @@ public class FileUploader {
         int status = client.executeMethod(put);
         if(status >= 300){
             System.out.println(new String(put.getResponseBody()));
-            throw new IOException(String.format("Error uploading file to %s. Error Code: %s", url, status));
+            throw new IOException(String.format("Error uploading file to %s. Error Code: %s", uploadPath, status));
+        }else{
+            System.out.println(String.format("Uploaded file:%s successfully", filePath));
         }
     }
 }
